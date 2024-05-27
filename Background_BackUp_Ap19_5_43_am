@@ -1,0 +1,275 @@
+//import javafx.animation.AnimationTimer;
+//import javafx.scene.input.KeyCode;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.paint.*;
+import java.util.ArrayList;
+import java.util.Random;
+
+public class BackGround extends BorderPane {
+	private Rectangle backGroundColorLeft;
+	private Rectangle backGroundColorRight;
+	private Circle sun;
+	private Circle moonGold;
+	private Circle moonPurple;
+	private Circle star;
+	private int starX, starY;
+	private Line playerDivider;
+	private Rectangle backGroundBrickL;
+	private Rectangle backGroundBrickR;
+	private BorderPane leftSide;
+	private BorderPane rightSide;
+	private HBox sideContainers;
+	private int brickCount;
+	private ArrayList<Rectangle> backGroundBrickContainerL;
+	private ArrayList<Rectangle> backGroundBrickContainerR;
+	private int[] brickRowTypes;
+	private Random randomBrickRowType;
+	private Random randomGap;
+	private int[] randomGapPlacement;
+	private int threeCount;
+	private int colorDecider;
+	private String colorSent;
+	private int randomType;
+	
+	public BackGround (int WIDTH, int HEIGHT) {
+		
+		leftSide = new BorderPane();
+		rightSide = new BorderPane();
+		sideContainers = new HBox();
+		
+		backGroundBrickContainerL = new ArrayList<Rectangle>();
+		backGroundBrickContainerR = new ArrayList<Rectangle>();
+		
+		backGroundColorLeft = new Rectangle();
+		backGroundColorLeft.setWidth(WIDTH/2);
+		backGroundColorLeft.setHeight(HEIGHT);
+		backGroundColorLeft.setFill(Color.web("48076a"));
+		this.getChildren().add(backGroundColorLeft);
+		
+		backGroundColorRight = new Rectangle();
+		backGroundColorRight.setX(WIDTH/2);
+		backGroundColorRight.setWidth(WIDTH);
+		backGroundColorRight.setHeight(HEIGHT);
+		backGroundColorRight.setFill(Color.SKYBLUE);
+		this.getChildren().add(backGroundColorRight);
+		
+		sun = new Circle(740, 60, 50, Color.YELLOW);
+		sun.setStrokeWidth(10);
+		//clouds
+		
+		randomGap = new Random();
+		for (int i = 0; i <= 40; i++) {
+			starX = 100;
+			starY = 100;
+			while ((starX > 50) && (starX < 350) && (starY > 64) && (starY < HEIGHT)) {
+				System.out.print("here");
+				starX = randomGap.nextInt(398) + 2;
+				starY = randomGap.nextInt(HEIGHT - 2) + 2;
+			}
+			star = new Circle (starX, starY, 2, Color.WHITE);
+			this.getChildren().add(star);
+		}
+		
+		moonPurple = new Circle(60, 60, 50, Color.GRAY);
+	    moonGold = new Circle(80, 60, 50, Color.web("48076a"));
+		
+		playerDivider = new Line((WIDTH / 2), 0, (WIDTH / 2), HEIGHT);
+		playerDivider.setStroke(Color.BLACK);
+		playerDivider.setStrokeWidth(10);
+		
+		randomGapPlacement = new int[7];
+		createBackGround(0, HEIGHT, 6, 23, "444444", randomGapPlacement);
+		//createBackGround(406, HEIGHT, 6, 23, "444444", randomGapPlacement);
+		
+		brickRowTypes = new int[10];
+		brickRowTypes[0] = 0;
+		randomBrickRowType = new Random();
+		//int showMeIt = 0;
+		for (int i = 0; i < brickRowTypes.length; i++) {
+			if (i <= 10) {
+				brickRowTypes[i] = randomBrickRowType.nextInt(3) + 1;
+				//showMeIt = brickRowTypes[i];
+			} else {
+				brickRowTypes[i] = 4;
+				//showMeIt = brickRowTypes[i];
+				System.out.print("done");
+			}
+		}
+		backGroundBrickContainerL.clear();
+		backGroundBrickContainerR.clear();
+		
+		threeCount = 0;
+		colorSent = "";
+		randomType = 0;
+		for (int p = 0; p < brickRowTypes.length; p++) {
+			colorDecider = randomBrickRowType.nextInt(10);
+			if (colorDecider <= 6) {
+				colorSent = "818181";
+			} else if (colorDecider <= 8) {
+				colorSent = "17e857";
+			} else {
+				colorSent = "972114";
+			}
+			
+			randomType = randomBrickRowType.nextInt(2) + 1;
+			
+			if (brickRowTypes[p] == 1) {
+				addForeGroundBrick(0, HEIGHT, randomGap, p, randomType, colorSent);
+				//addForeGroundBrick1(406, HEIGHT, randomGap, p);
+				
+			} else if (brickRowTypes[p] == 2) {
+				addForeGroundBrick(0, HEIGHT, randomGap, p, randomType, colorSent);
+				//addForeGroundBrick2(406, HEIGHT, randomGap, p);
+				
+			} else if (brickRowTypes[p] == 3) {
+				threeCount++;
+				if (threeCount < 4) {
+					addForeGroundBrick3(0, HEIGHT, randomGap, p);
+				} else {
+					addForeGroundBrick(0, HEIGHT, randomGap, p, randomType, colorSent);
+				}
+				
+			} 
+		}
+		
+		sideContainers.getChildren().addAll(leftSide, rightSide);
+		this.getChildren().addAll(playerDivider, sun, moonPurple, moonGold);
+		this.getChildren().add(sideContainers);
+	}
+	
+	public void createBackGround(int initialBackgroundX, int HEIGHT, int brickCountLimit, int totalRowsLimit, String colorChoice, int[] gapPlaces) {
+		int totalRows = 0;
+		int changedX = 22;
+		int changedY = 45;
+		int gapTracker= 0;
+		while ((brickCount <= brickCountLimit) && (totalRows < totalRowsLimit)) {
+			if (gapPlaces[gapTracker] == 0)  {
+				backGroundBrickL = new Rectangle((initialBackgroundX + changedX), (HEIGHT - changedY), 50, 45);
+				backGroundBrickL.setFill(Color.web(colorChoice));
+				backGroundBrickL.setStrokeWidth(2);
+				backGroundBrickL.setStroke(Color.BLACK);
+				backGroundBrickContainerL.add(backGroundBrickL);
+				leftSide.getChildren().add(backGroundBrickL);
+				rightSide.getChildren().add(backGroundBrickL);
+				
+				backGroundBrickR = new Rectangle((initialBackgroundX + 406 + changedX), (HEIGHT - changedY), 50, 45);
+				backGroundBrickR.setFill(Color.web(colorChoice));
+				backGroundBrickR.setStrokeWidth(2);
+				backGroundBrickR.setStroke(Color.BLACK);
+				backGroundBrickContainerR.add(backGroundBrickR);
+				leftSide.getChildren().add(backGroundBrickR);
+				rightSide.getChildren().add(backGroundBrickR);
+			}
+
+			System.out.println("\nbackGroundBrickContainerL size: " + backGroundBrickContainerL.size()
+							   + "\nbackGroundBrickContainerR size: " + backGroundBrickContainerR.size());
+			brickCount++;
+			if (brickCount <= brickCountLimit) {
+				changedX = changedX + 50;
+				gapTracker++;
+			} else {
+				changedX = 22;
+				changedY = changedY + 34;
+				brickCount = 0;
+				totalRows++;
+				gapTracker = 0;
+			}
+		}
+	}
+	
+	public void addForeGroundBrick(int xValue, int HEIGHT, Random insertGap, int level, int randomType, String color) {
+		int oneGap = insertGap.nextInt(5);
+		int twoGap = oneGap + 1;
+		if (twoGap >= 6) {
+			twoGap = 4;
+		} else if (oneGap == 0) {
+			oneGap = 2;
+			twoGap = 3;
+		}
+		
+		for (int i = 0; i <= randomGapPlacement.length; i++) {
+			if (i == oneGap) {
+				randomGapPlacement[i] = 1;
+				break;
+			}
+		}
+		
+		//if (randomType == 2) {
+			for (int k = 0; k <= randomGapPlacement.length; k++) {
+				if (k == twoGap) {
+					randomGapPlacement[k] = 1;
+					break;
+				}
+			}
+		//}
+		
+		createBackGround(xValue, HEIGHT - (38 * (2 * level) + 36), 6, 1, color, randomGapPlacement);
+		for (int j = 0; j < randomGapPlacement.length; j++) {
+			randomGapPlacement[j] = 0;
+		}
+	}
+	/*
+	public void addForeGroundBrick2(int xValue, int HEIGHT, Random insertGap, int level) {
+		
+		int oneGap = insertGap.nextInt(5) + 1;
+		int twoGap = insertGap.nextInt(5) + 1;
+		while (twoGap == oneGap) {
+			twoGap = insertGap.nextInt(5) + 1;
+		}
+		for (int i = 0; i <= oneGap; i++) {
+			if (i == oneGap) {
+				randomGapPlacement[i] = 1;
+				break;
+			}
+		}
+		for (int k = 0; k <= twoGap; k++) {
+			if (k == twoGap) {
+				randomGapPlacement[k] = 1;
+				break;
+			}
+		}
+		
+		createBackGround(xValue, HEIGHT - (32 * (3 * level) + 64), 6, 1, "818181", randomGapPlacement);
+		
+		for (int j = 0; j < randomGapPlacement.length; j++)
+			randomGapPlacement[j] = 0;
+	}
+	*/
+	// colors
+	public void addForeGroundBrick3(int xValue, int HEIGHT, Random insertGap, int level) {
+		int oneGap = insertGap.nextInt(5);
+		for (int i = 0; i <= randomGapPlacement.length; i++) {
+			if (i == oneGap) {
+				randomGapPlacement[i] = 1;
+				break;
+			}
+		}
+		createBackGround(xValue, HEIGHT - (38 * (2 * level) + 36), 6, 1, "972114", randomGapPlacement);
+		for (int j = 0; j < randomGapPlacement.length; j++)
+			randomGapPlacement[j] = 0;
+	}
+	
+	public ArrayList<Rectangle> getBackGroundBrickContainerL() {
+		return backGroundBrickContainerL;
+	}
+	
+	public ArrayList<Rectangle> getBackGroundBrickContainerR() {
+		return backGroundBrickContainerR;
+	}
+	
+	/*
+	MAYBE ADD THIS AT THE END SPEARATELY FOR THE "CASTLE" TOP LOOK?
+	
+	public void addForeGroundBrickFinal(int xValue, int HEIGHT) {
+		randomGapPlacement[1] = 1;
+		randomGapPlacement[5] = 1;
+		createBackGround(0, HEIGHT, 6, 23, "818181", randomGapPlacement);
+		for (int j = 0; j < randomGapPlacement.length; j++)
+			randomGapPlacement[j] = 0;
+	}
+	*/
+}

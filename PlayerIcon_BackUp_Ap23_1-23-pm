@@ -1,0 +1,489 @@
+/*
+					 for (Rectangle wall : allBricks) {
+						Shape boundaryChecker = Shape.intersect(checker1, wall);
+						for (int j = 0; j <= 50; j++) {
+							if (boundaryChecker.getBoundsInLocal().getWidth() != -1) {
+								didItColGreen = true;
+							}
+							
+							if (didItColGreen) {
+								break;
+							} else {
+								firstP.setY(firstP.getY() + 2);
+								checker1.setY(firstP.getY());
+							}
+						}
+					} 
+				   */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
+
+import java.util.ArrayList;
+import javafx.animation.AnimationTimer;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.*;
+
+public class PlayerIcon extends StackPane {
+	private Pane rectangleHouse;
+	private Rectangle firstP;
+	private Rectangle secondP;
+	private boolean p1W, p1A, p1S, p1D, p2Up, p2Left, p2Down, p2Right, inAir1, inAir2;
+	private AnimationTimer playerTimer;
+	private double changeHorizontal_P1;
+	private double changeVertical_P1;
+	private double changeHorizontal_P2;
+	private double changeVertical_P2;
+	private double initX_P1;
+	private double initY_P1;
+	private double initX_P2;
+	private double initY_P2;
+	private int HEIGHT;
+	private int WIDTH;
+	private int previousOneGap;
+	private int previousTwoGap;
+	private ArrayList<Rectangle> leftPlayerBricks;
+	private ArrayList<Rectangle> rightPlayerBricks;
+	
+	public PlayerIcon(int height, int width, ArrayList<Rectangle> leftBricks, ArrayList<Rectangle> rightBricks) {
+		HEIGHT = height;
+		WIDTH = width;
+		
+		initX_P1 = 193;
+		initY_P1 = HEIGHT - 15;
+		initX_P2 = 597;
+		initY_P2 = 750;
+		changeHorizontal_P1 = 0;
+		changeVertical_P1 = 0;
+		changeHorizontal_P2 = 0;
+		changeVertical_P2 = 0;
+		
+		firstP = new Rectangle(initX_P1, initY_P1, 15, 15);
+		firstP.setFill(Color.RED);
+		secondP = new Rectangle(initX_P2, initY_P2, 20, 20);
+		secondP.setFill(Color.GREEN);
+		
+		rectangleHouse = new Pane();
+		playerTimer = new AnimationTimerCharacters();
+		
+		leftPlayerBricks = leftBricks;
+		rightPlayerBricks = rightBricks;
+		
+		p1W = false;
+		p1A = false;
+		p1S = false;
+		p1D = false;
+		p2Up = false;
+		p2Left = false;
+		p2Down = false;
+		p2Right = false;
+
+		rectangleHouse.getChildren().add(firstP);
+		rectangleHouse.getChildren().add(secondP);
+		this.getChildren().add(rectangleHouse);
+		this.setFocusTraversable(true);
+		playerTimer.start();
+	}
+	
+	public void movingPlayers(StackPane header) {
+		header.setOnKeyPressed(new CharacterMoverPressed());
+		header.setOnKeyReleased(new CharacterMoverReleased());
+	}
+	
+	private class CharacterMoverPressed implements EventHandler<KeyEvent> {
+		public void handle (KeyEvent e) {
+			//check which key is pressed
+			switch(e.getCode()){
+				//for w go up if in scene range
+				case W:
+					System.out.println("W True");
+					p1W = true;
+					inAir1 = true;
+					break;
+
+				//for d go right if in scene range
+				case D:
+					System.out.println("D True");
+					p1D = true;
+					break;
+				//for a go left if in scene range
+				case A:
+					System.out.println("A True");
+					p1A = true;
+					break;
+				case UP:
+					p2Up = true;
+					inAir2 = true;
+					break;
+				//for s go down if in scene range
+				case DOWN:
+					p2Down = true;
+					break;
+				//for d go right if in scene range
+				case RIGHT:
+					p2Right = true;
+					break;
+				//for a go left if in scene range
+				case LEFT:
+					System.out.println("Left True");
+					p2Left = true;
+					break;
+			}
+		}
+	}
+	
+	private class CharacterMoverReleased implements EventHandler<KeyEvent> {
+		public void handle (KeyEvent e) {
+			switch(e.getCode()){
+				//for w go up if in scene range
+				case W:
+					System.out.println("W False" );
+					p1W = false;
+					break;
+					
+				//for s go down if in scene range
+				case S:
+					System.out.println("S False");
+					p1S = false;
+					break;
+				//for d go right if in scene range
+				case D:
+					System.out.println("D False");
+					p1D = false;
+					break;
+				//for a go left if in scene range
+				case A:
+					System.out.println("A False");
+					p1A = false;
+					break;
+					
+				case UP:
+					System.out.println("Up False");
+					p2Up = false;
+					break;
+				//for s go down if in scene range
+				case DOWN:
+					System.out.println("Down False");
+					p2Down = false;
+					break;
+				//for d go right if in scene range
+				case RIGHT:
+					System.out.println("Right False");
+					p2Right = false;
+					break;
+				//for a go left if in scene range
+				case LEFT:
+					System.out.println("Left False");
+					p2Left = false;
+					break;
+			}
+		}
+	}
+	
+	public class AnimationTimerCharacters extends AnimationTimer{
+		public void handle(long currentTime) {
+			int gravity = 1;
+			boolean onPlatform = true;
+			boolean upChecking = false;
+			int limit = 45;
+			gravity = (1/2) * gravity;
+			boolean clipping_p1 = false;
+			boolean clipping_p2 = false;
+			boolean left = checkLeft(firstP, leftPlayerBricks, rectangleHouse);
+		    boolean right = checkRight(firstP, leftPlayerBricks, rectangleHouse);
+		    boolean down = checkDown(firstP, leftPlayerBricks, rectangleHouse);
+		    boolean up = checkUp(firstP, leftPlayerBricks, rectangleHouse);
+			double yPos1 = firstP.getY();
+
+			if (p1A && !(p1D)) {
+				if (left) {
+					changeHorizontal_P1 += 3.0;
+				} else {
+				    //moveOut(firstP, leftPlayerBricks, "left");
+					changeHorizontal_P1 += 3.0;
+					//changeVertical_P1++;
+				}
+					
+			} else if (!(p1A) && p1D) {
+				if (right) {
+					changeHorizontal_P1 -= 3.0;
+				} else {
+					//if(checkDown(firstP, leftPlayerBricks, rectangleHouse))
+					//moveOut(firstP, leftPlayerBricks, "right");
+					changeHorizontal_P1 -= 3;
+					 if(changeVertical_P1 == 0) {
+						 changeHorizontal_P1--;
+
+					 }
+					//changeVertical_P1++;
+				}
+				
+			} else if ((p1A && p1D) || (!p1A && !p1D)) {
+				changeHorizontal_P1 *= 0.8;
+			}
+			
+			if (((!right && !left && !up) == true)) {
+				changeVertical_P1--;
+			}
+			
+			
+			if (changeHorizontal_P1 > 0 && changeHorizontal_P1 < 1) {
+				changeHorizontal_P1 = 0;
+			}
+			if (changeHorizontal_P1 < 0 && changeHorizontal_P1 > -1) {
+				changeHorizontal_P1 = 0;
+			}
+			
+			if (changeHorizontal_P1 > 3.0) {
+				changeHorizontal_P1 = 3.0;
+			}
+			if (changeHorizontal_P1 < -3.0) {
+				changeHorizontal_P1 = -3.0;
+			}
+			
+			if (p1W && (changeVertical_P1 == 0)) {
+				for (int i = 0; i <= limit; i++) {
+					//if (checkUp(firstP, leftPlayerBricks, rectangleHouse) && !inAir1) {
+					//if (!checkAllBoxes(firstP.getX(), firstP.getY() - 10, firstP, leftPlayerBricks)) {
+					//if (checkUp(firstP, leftPlayerBricks, rectangleHouse)){
+					if (up) {
+						changeVertical_P1 --;
+						upChecking = false;
+						
+					}
+					else { 
+						//moveOut(firstP, leftPlayerBricks, "up");
+						upChecking = true;
+						//changeVertical_P1 ++;
+						inAir1 = true;
+						break;
+					} 
+					//if(!checkDown(firstP, leftPlayerBricks, rectangleHouse)) {
+						//changeVertical_P1--;
+						//onPlatform = true;
+				//	}
+				}
+			}
+
+			if (p2Up && !(p2Down)) {
+				changeVertical_P2 = -6.0;
+			}
+			if (!(p2Up) && p2Down) {
+				changeVertical_P2 = 6.0;
+			}
+			if ((p2Up && p2Down) || !(p2Up && p2Down)) {
+				changeVertical_P2 = 0.0;
+			}
+			if (p2Left && !(p2Right)) {
+				changeHorizontal_P2 = -6.0;
+			}
+			if (!(p2Left) && p2Right) {
+				changeHorizontal_P2 = 6.0;
+			}
+			if ((p2Left && p2Right) || !(p2Left && p2Right)) {
+				changeHorizontal_P2 = 0.0;
+			}
+			
+			initX_P1 += changeHorizontal_P1;
+			initY_P1 += changeVertical_P1;
+			initX_P2 += changeHorizontal_P2;
+			initY_P2 += changeVertical_P2;
+			
+			if (changeVertical_P1 == 0) {
+				inAir1 = false;
+			} else {
+				changeVertical_P1 -= 10;
+				inAir1 = true;
+			}
+			
+			if (changeVertical_P2 == 0) {
+				inAir2 = false;
+			} else {
+				inAir2 = true;
+			}
+	
+			if ((initY_P1 < (HEIGHT - (firstP.getHeight()))) && (clipping_p1 == false)) {
+				changeVertical_P1 = 1;
+			}
+			if ((initY_P2 < (HEIGHT - (secondP.getHeight()))) && (clipping_p2 == false)) {
+				changeVertical_P2 = 1;
+			}
+			
+			
+			//System.out.println("Clipping 1 and 2: " + clipping_p1 + " " + clipping_p2);
+			//System.out.println("inAir1: " + inAir1);
+			
+			if (down) {
+			//if (!checkAllBoxes(firstP.getX(), firstP.getY(), firstP, leftPlayerBricks)) {
+				//System.out.println("here checkDown if");
+				if ((initY_P1 >= (HEIGHT - 15)) || (firstP.getY() >= (HEIGHT - 15))) {
+					changeVertical_P1 = 0;
+					onPlatform = true;
+					inAir1 = false;
+				} else {
+					changeVertical_P1 += 1;	
+					onPlatform = false;
+					inAir1 = true;
+				}
+			} else {
+				changeVertical_P1 = 0;
+				onPlatform = true;
+				inAir1 = false;
+			}
+			
+			if (initY_P2 >= (HEIGHT - 15)) {
+				changeVertical_P2 = 0;
+			} else {
+				//System.out.println("here");
+				changeVertical_P2 += 10;
+			}
+			
+			
+			
+			firstP.setX(initX_P1);
+			firstP.setY(initY_P1);
+			secondP.setX(initX_P2);
+			secondP.setY(initY_P2);
+			
+			System.out.println("plat: " + onPlatform + " | inAir: " + inAir1 + " | upBound " + upChecking + " | yVel: " + changeVertical_P1 + " | pLeft: "+ left + " | pRight " + right + " | pUp: "+ up + " | pDown: " + down);
+			//" | yPos: " + yPos1 +
+			
+			//UNCOMMENT LINE BELOW IF DEBUG INFORMATION IS NEEDED (WILL SHOW IN CONSOLE)
+			//debugInfoToConsole();
+		}
+	}
+		
+	public void checkAllBoxes (double x, double y, Rectangle player, ArrayList<Rectangle> platforms) {
+		Rectangle playerChecker = new Rectangle(x, y, player.getWidth(), player.getHeight());
+		double upperLeftX, upperLeftY;
+		double upperRightX, upperRightY;
+		double bottomLeftX, bottomLeftY;
+		double bottomRightX, bottomRightY;
+		
+		for (int i = 0; i < platforms.size(); i++) {
+			upperLeftX = platforms.get(i).getX();
+			upperLeftY = platforms.get(i).getY();
+			upperRightX = platforms.get(i).getX() + platforms.get(i).getWidth();
+			upperRightY = platforms.get(i).getY();
+			bottomLeftX = platforms.get(i).getX();
+			bottomLeftY = platforms.get(i).getY() + platforms.get(i).getHeight();
+			bottomRightX = platforms.get(i).getX() + platforms.get(i).getWidth();
+			bottomRightY = platforms.get(i).getY() + platforms.get(i).getHeight();
+			
+			if (upperRightX >= playerChecker.getX()){
+				initX_P1 = upperRightX + 1;
+				System.out.println("here1");
+			} else if (upperLeftX <= playerChecker.getX() + playerChecker.getWidth()) {
+				initX_P1 = upperLeftX - playerChecker.getWidth() - 1;
+				System.out.println("here2");
+			} else if (bottomLeftY >= playerChecker.getY()) {
+				initY_P1 = bottomLeftY + 1;
+				System.out.println("here3");
+			} else if (upperLeftY <= playerChecker.getY() + playerChecker.getHeight()) {
+				initY_P1 = bottomLeftY - playerChecker.getWidth() - 1;
+				System.out.println("here4");
+			}
+		}
+	}
+	
+	public boolean checkUp (Rectangle player, ArrayList<Rectangle> platforms, Pane rectangleHouse) {
+		//Rectangle playerChecker = new Rectangle(player.getX(), player.getY() - 1, player.getWidth(), player.getHeight());
+		Shape collided = null;
+		for (int i = 0; i < platforms.size(); i++) {
+			collided = collided.intersect(player, platforms.get(i));
+			//if (playerChecker.getBoundsInParent().intersects(platforms.get(i).getBoundsInParent())) {
+			if(collided.getBoundsInLocal().getWidth() != -1) {
+				changeVertical_P1 = 0;
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public boolean checkDown (Rectangle player, ArrayList<Rectangle> platforms, Pane rectangleHouses) {
+		//Rectangle playerChecker = new Rectangle(player.getX(), player.getY() + 1, player.getWidth(), player.getHeight());
+		Shape collided = null;
+		for (int i = 0; i < platforms.size(); i++) {
+			collided = collided.intersect(player, platforms.get(i));
+			//if (playerChecker.getBoundsInParent().intersects(platforms.get(i).getBoundsInParent())) {
+			if(collided.getBoundsInLocal().getWidth() != -1) {
+				changeVertical_P1 = 0;
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public boolean checkLeft (Rectangle player, ArrayList<Rectangle> platforms, Pane rectangleHouses) {
+		//Rectangle playerChecker = new Rectangle(player.getX() - 1, player.getY(), player.getWidth(), player.getHeight());
+		
+		Shape collided = null;
+		for (int i = 0; i < platforms.size(); i++) {
+			collided = collided.intersect(player, platforms.get(i));
+			//if (playerChecker.getBoundsInParent().intersects(platforms.get(i).getBoundsInParent())) {
+			if(collided.getBoundsInLocal().getWidth() != -1) {
+				changeHorizontal_P1 = 0;
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public boolean checkRight (Rectangle player, ArrayList<Rectangle> platforms, Pane rectangleHouses) {
+		//Rectangle playerChecker = new Rectangle(player.getX() + 1, player.getY(), player.getWidth(), player.getHeight());
+
+		Shape collided = null;
+		for (int i = 0; i < platforms.size(); i++) {
+			collided = collided.intersect(player, platforms.get(i));
+			//if (playerChecker.getBoundsInParent().intersects(platforms.get(i).getBoundsInParent())) {
+			if(collided.getBoundsInLocal().getWidth() != -1) {
+				changeHorizontal_P1 = 0;
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public void moveOut(Rectangle player, ArrayList<Rectangle> platforms, String direction) {
+		for (int i = 0; i < platforms.size(); i++) {
+			while (player.getBoundsInParent().intersects(platforms.get(i).getBoundsInParent())) {
+				if (direction.equals("left")) {
+					player.setX(player.getX() + 1);
+				} else if (direction.equals("right")) {
+					player.setX(player.getX() - 1);
+				} else if (direction.equals("up")) {
+					player.setY(player.getY() - 1);
+				} 
+				
+			}
+		}
+	}
+	
+	public void debugInfoToConsole() {
+		
+	}
+}
